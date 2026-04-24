@@ -1,0 +1,349 @@
+---
+title: "UTS ANDAT"
+author: "Alpian"
+date: "2026-04-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r cars}
+summary(cars)
+```
+
+# Soal 2 
+#A. BINOMIAL
+diketahui:
+p=0,7, size=12
+```{r}
+dbinom(9, size = 12, prob = 0.7)
+
+x_1 = 0:12
+peluang = dbinom(x_1, size = 12, prob = 0.7)
+
+data.frame(x_1, peluang)
+
+barplot(peluang, names.arg=x_1, col="black",
+        main="Distribusi Binomial",
+        xlab="Jumlah Sembuh",
+        ylab="Peluang")
+```
+# --- Interpretasi ---
+ Output menunjukkan bahwa probabilitas tepat 9 dari 12 pasien berhasil sembuh 
+ (dengan asumsi peluang sembuh individu adalah 70%) adalah sekitar 
+ 0.2397 atau 23.97%.
+ --- Interpretasi Plot Binomial ---
+ Grafik menunjukkan distribusi yang condong ke kiri (negatively skewed). 
+ Titik puncak (probabilitas tertinggi) berada di angka 8 dan 9. Hal ini sangat 
+ logis secara matematis karena nilai ekspektasi (rata-rata harapan) dari 
+ distribusi ini adalah n * p = 12 * 0.7 = 8.4.
+ 
+ 
+# B. POISSON
+```{r}
+dpois(7, lambda = 5)
+
+x_2 = 0:10
+peluang2 = dpois(x_2, lambda = 5)
+data.frame(x_2, peluang2)
+
+barplot(peluang2, names.arg=x_2, col="pink",
+        main="Distribusi Poisson",
+        xlab="Jumlah Pasien",
+        ylab="Peluang")
+```
+# --- Interpretasi ---
+ Output ini menunjukkan bahwa peluang datangnya tepat 7 pasien dalam suatu 
+ interval waktu atau ruang (di mana rata-rata historisnya adalah 5 pasien) 
+ adalah sekitar 0.1044 atau 10.44%
+--- Interpretasi Plot Poisson ---
+ Grafik menunjukkan bentuk yang agak condong ke kanan (positively skewed).
+ Puncak probabilitas berada di sekitar angka 4 dan 5, yang secara empiris
+ mengonfirmasi parameter lambda (rata-rata) = 5. Semakin jauh nilai x 
+ dari nilai ekspektasinya, probabilitas akan semakin meluruh mendekati nol.
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+# --- KESIMPULAN MENYELURUH: BINOMIAL vs POISSON ---
+ 1. Perbedaan Karakteristik Dasar (Batasan Ruang Sampel):
+    - Binomial: Memodelkan jumlah keberhasilan dari himpunan percobaan yang 
+      terbatas (n=12). Ada batas atas absolut; tidak mungkin ada 13 pasien 
+      yang sembuh dari total 12 pasien.
+    - Poisson: Memodelkan jumlah kejadian kontinu dalam suatu dimensi. Secara 
+      teoritis TIDAK MEMILIKI BATAS ATAS (n menuju tak hingga), meskipun 
+      probabilitas kejadian di angka yang ekstrem akan sangat mendekati nol.
+
+ 2. Parameter Pengendali Model:
+    - Model Binomial dikendalikan oleh dua parameter: ukuran sampel (n) dan 
+      peluang sukses konstan (p).
+    - Model Poisson jauh lebih sederhana, hanya dikendalikan oleh satu parameter 
+      yaitu tingkat kejadian rata-rata (lambda).
+
+SINTESIS PRAKTIS:
+ Memilih antara kedua distribusi ini bergantung pada apa yang kita ketahui di 
+ lapangan. Jika populasi total (n) diketahui secara pasti (misal: pasien 
+ dalam ruang isolasi), gunakan Binomial. Namun, jika kita hanya memiliki data 
+ laju (rate) tanpa mengetahui populasi maksimal (misal: jumlah pasien yang 
+ tiba di IGD setiap jam), maka Poisson adalah model matematis yang tepat.
+
+# Soal 3
+# 1. Inisialisasi Data & Tabel Kontingensi
+```{R}
+a <- 15
+b <- 5
+c <- 20
+d <- 25
+
+tabel_kontingensi <- matrix(c(a, b,
+                            c, d),
+                          nrow = 2, 
+                          byrow = TRUE)
+
+rownames(tabel_kontingensi) <- c("Kurang", "Baik")
+colnames(tabel_kontingensi) <- c("Tidak_Lulus", "Lulus")
+
+tabel_kontingensi
+```
+# --- Penjelasan Singkat Tabel Kontingensi ---
+Matriks 2x2 di atas memetakan hubungan antara kondisi dan hasil uji:
+Baris (Exposure) : Kondisi "Kurang" vs "Baik"
+Kolom (Outcome)  : Status "Tidak_Lulus" vs "Lulus"
+Pendefinisian variabel sel (a, b, c, d) dilakukan agar perhitungan 
+probabilitas bersyarat seperti RR dan OR di tahap selanjutnya 
+lebih efisien dan tidak tertukar posisinya.
+
+# 2. Uji Chi Square
+```{r}
+chisq.test(tabel_kontingensi, correct = FALSE)
+```
+#--- Interpretasi Uji Chi-Square ---
+Output akan menampilkan p-value. Jika p-value < 0.05 (alpha 5%), maka tolak H0.
+Maknanya: Ada bukti statistik yang cukup untuk menyatakan bahwa terdapat
+hubungan yang signifikan antara kondisi (Kurang/Baik) dengan kelulusan.
+
+
+# 3. Menghitung Risiko (Risk)
+n1 = total subjek baris 1, n0 = total subjek baris 2
+```{r}
+n1 <- a + b
+n0 <- c + d
+
+risiko_kurang <- a / n1
+risiko_baik   <- c / n0
+
+risiko_kurang
+risiko_baik
+```
+# --- Interpretasi Risiko (Risk) ---
+risiko_kurang (0.75): Probabilitas subjek dengan kondisi "Kurang" untuk TIDAK LULUS adalah 75%.
+risiko_baik (~0.44): Probabilitas subjek dengan kondisi "Baik" untuk TIDAK LULUS adalah 44.4%.
+
+
+# 4. Beda Risiko (BR)
+```{r}
+BR <- risiko_kurang - risiko_baik
+BR
+```
+# --- Interpretasi Beda Risiko (BR) ---
+Nilai BR (~0.306) merepresentasikan selisih probabilitas absolut. 
+Artinya, kelompok dengan kondisi "Kurang" memiliki risiko tidak lulus 
+30.6% lebih tinggi dibandingkan dengan kelompok berkondisi "Baik".
+
+
+# 5. Risk Ratio (RR)
+```{r}
+RR <- risiko_kurang / risiko_baik
+RR
+```
+# --- Interpretasi Risk Ratio (RR) ---
+Nilai RR (~1.69). Karena RR > 1, kondisi "Kurang" merupakan faktor risiko.
+Kelompok dengan kondisi "Kurang" berisiko 1.69 kali lipat lebih besar untuk 
+mengalami kegagalan (tidak lulus) dibandingkan kelompok "Baik".
+
+
+# 6. Odds Ratio (OR)
+```{r}
+OR <- (a * d) / (b * c)
+OR
+```
+# --- Interpretasi Odds Ratio (OR) ---
+Nilai OR (3.75). Karena OR > 1, kecenderungan (odds) kegagalan pada
+kelompok "Kurang" adalah 3.75 kali lebih besar dibandingkan kelompok "Baik".
+
+
+# 7. Confidence Interval (CI) untuk BR, RR, dan OR
+```{r}
+z <- 1.96 # Nilai kuantil Z untuk tingkat kepercayaan 95% (alpha 5%)
+```
+
+# CI - Beda Risiko (BR)
+```{r}
+SE_BR <- sqrt((risiko_kurang * (1 - risiko_kurang)) / n1 + (risiko_baik * (1 - risiko_baik)) / n0)
+CI_BR <- c(BR - z * SE_BR, BR + z * SE_BR)
+```
+# CI - Risk Ratio (RR)
+```{r}
+SE_RR <- sqrt((1/a - 1/n1) + (1/c - 1/n0))
+CI_RR <- exp(log(RR) + c(-1, 1) * z * SE_RR)
+```
+# CI - Odds Ratio (OR)
+```{r}
+SE_OR <- sqrt(1/a + 1/b + 1/c + 1/d)
+CI_OR <- exp(log(OR) + c(-1, 1) * z * SE_OR)
+```
+# Menampilkan semua hasil kalkulasi
+```{r}
+BR
+CI_BR
+RR
+CI_RR
+OR
+CI_OR
+```
+#--- Interpretasi Confidence Interval (CI) ---
+CI memberikan rentang estimasi populasi dengan tingkat kepercayaan 95%.
+- Untuk CI_BR: Jika intervalnya TIDAK melewati/memuat angka 0, maka selisih risiko bermakna signifikan.
+- Untuk CI_RR & CI_OR: Jika intervalnya TIDAK melewati/memuat angka 1, maka rasio tersebut bermakna signifikan.
+Hal ini seharusnya selaras dan mengonfirmasi kesimpulan dari uji Chi-Square di awal.
+#--- Kesimpulan dari kasus soal nomor 2 ---
+1. Signifikansi Statistik: 
+    Berdasarkan Uji Chi-Square, terdapat hubungan yang signifikan secara empiris
+    antara kondisi (Kurang/Baik) dengan status kelulusan (Lulus/Tidak Lulus).
+
+2. Kondisi "Kurang" sebagai Faktor Risiko Nyata:
+    - Beda Risiko (BR): Terdapat peningkatan probabilitas kegagalan secara  
+      absolut sebesar 30.6% pada kelompok "Kurang" dibandingkan kelompok "Baik".
+    - Risk Ratio (RR): Risiko tidak lulus bagi kelompok "Kurang" adalah 
+      1.69 kali lipat lebih besar dibandingkan kelompok "Baik".
+    - Odds Ratio (OR): Kecenderungan (odds) gagal pada kelompok "Kurang" adalah 
+      3.75 kali lebih tinggi dari kelompok "Baik".
+3. Konsistensi Estimasi Populasi (CI 95%):
+    Rentang Confidence Interval (CI) memvalidasi temuan ini. CI untuk BR 
+    tidak memuat angka 0, serta CI untuk RR dan OR tidak memuat angka 1. Hal ini 
+    membuktikan bahwa efek buruk dari kondisi "Kurang" ini signifikan secara 
+    inferensial, murni karena efek perlakuan dan bukan karena variasi acak sampel.
+
+SINTESIS PENUTUP:
+ Program secara matematis membuktikan bahwa kondisi "Kurang" sangat merugikan 
+ dan mendongkrak probabilitas ketidaklulusan. Jika digunakan untuk pengambilan 
+ keputusan, intervensi harus difokuskan pada perbaikan kondisi subjek.
+ 
+# Soal 4 
+# 1. Inisialisasi Data Array (Tabel 3-Arah)
+# Struktur: Mobil (2) x Kecelakaan (2) x Keparahan (2)
+```{r}
+data_mobil <- array(c(156, 43,   # Parah: Tabrakan (Std, Kecil)
+                      59, 422,  # Parah: Berguling (Std, Kecil)
+                      413, 105, # Tidak Parah: Tabrakan (Std, Kecil)
+                      110, 71), # Tidak Parah: Berguling (Std, Kecil)
+                    dim = c(2, 2, 2),
+                    dimnames = list(
+                      Mobil = c("Standar", "Kecil"),
+                      Kecelakaan = c("Tabrakan", "Berguling"),
+                      Keparahan = c("Parah", "Tidak_Parah")
+                    ))
+
+data_mobil
+```
+
+
+# 2. Uji Cochran-Mantel-Haenszel (CMH)
+```{r}
+mantelhaen.test(data_mobil)
+```
+# --- Interpretasi CMH ---
+Uji ini memeriksa apakah ada hubungan antara 'Mobil' dan 'Kecelakaan' 
+setelah mengontrol variabel 'Keparahan'. 
+Jika p-value < 0.05, maka terdapat asosiasi parsial yang signifikan 
+antar variabel utama pada setiap strata keparahan.
+
+
+
+# 3. Persiapan Data Frame untuk Model Log-Linear
+```{r}
+df_mobil <- as.data.frame.table(data_mobil)
+names(df_mobil) <- c("Mobil", "Kecelakaan", "Keparahan", "Frekuensi")
+df_mobil
+```
+
+
+# 4. Model 1: Saturated Model (Interaksi 3-Arah)
+```{r}
+model_jenuh <- glm(Frekuensi ~ Mobil * Kecelakaan * Keparahan, 
+                   family = poisson, data = df_mobil)
+```
+
+# --- Interpretasi Model Jenuh ---
+Model ini memasukkan semua kemungkinan interaksi (termasuk interaksi 3-arah).
+Model jenuh akan memiliki 'Deviance' sebesar 0 karena model fit sempurna 
+dengan data observasi. Digunakan sebagai baseline perbandingan.
+
+
+
+# 5. Model 2: Homogeneous Association Model (Interaksi 2-Arah)
+```{r}
+model_homogen <- glm(Frekuensi ~ (Mobil + Kecelakaan + Keparahan)^2,
+                     family = poisson, data = df_mobil)
+                     
+```
+
+# --- Interpretasi Model Homogen ---
+Model ini mengasumsikan bahwa asosiasi antara dua variabel adalah sama 
+(konstan) pada setiap level variabel ketiga. Tidak ada interaksi 3-arah di sini.
+
+
+
+# 6. Perbandingan Model (Uji Likelihood Ratio)
+```{r}
+anova(model_homogen, model_jenuh, test = "Chisq")
+```
+# --- Interpretasi Anova ---
+ Membandingkan apakah penghapusan interaksi 3-arah (Mobil:Kecelakaan:Keparahan) 
+ menyebabkan penurunan kecocokan model yang signifikan. 
+Jika p-value < 0.05, maka interaksi 3-arah tersebut wajib dipertahankan (Model Jenuh lebih baik).
+
+
+
+# 7. Summary Model Jenuh
+```{r}
+summary(model_jenuh)
+```
+# --- Interpretasi Summary ---
+Menampilkan koefisien estimasi untuk setiap parameter. Kita bisa melihat 
+efek spesifik dari kombinasi variabel (misal: Mobil Kecil & Berguling) 
+terhadap frekuensi kecelakaan yang parah.
+
+
+
+# ---- KESIMPULAN AKHIR PERBANDINGAN DUA TEST ----
+1. Dimensionalitas & Batasan Analisis:
+    - Chi-Square (Soal 2): Bekerja pada dimensi 2D (Bivariat). angat efektif
+      untuk menguji independensi mutlak antara dua variabel secara terisolasi.
+    - CMH & Log-Linear (Soal 3): Bekerja pada dimensi 3D (Multivariat). 
+      Memasukkan variabel ketiga sebagai "ruang" tambahan/strata probabilitas.
+
+2. Mekanisme & Tujuan Uji:
+    - Chi-Square menjawab "Apakah A saling bebas dari B?". Uji ini solid namun
+      "buta" terhadap efek variabel pengganggu (confounder).
+    - Uji CMH memfilter data untuk melihat apakah asosiasi parsial tetap ada 
+      setelah variabel ketiga (Keparahan) dikontrol secara konstan.
+    - Model Log-Linear (GLM) bertindak sebagai "arsitek" yang memodelkan 
+      kombinasi interaksi tersebut menggunakan distribusi Poisson untuk 
+      mencari arsitektur dengan error (Deviance) paling minim.
+
+SINTESIS AKHIR (Evolusi Inferensi Statistik):
+ Perbandingan ini mendemonstrasikan transisi dari sistem tertutup (Chi-Square) 
+ ke realitas empiris yang kompleks (Log-Linear). Pada data yang tumpang tindih, 
+ pemodelan multivariat wajib digunakan untuk menghindari "Simpson's Paradox" 
+ (korelasi palsu akibat agregasi paksa tabel 3-arah menjadi 2-arah).
